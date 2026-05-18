@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ExpenseFlow – Manager Dashboard</title>
+<link rel="stylesheet" th:href="@{/css/style.css}"/>
+<style>
+.action-form{display:inline;}
+.expense-row td{vertical-align:middle;}
+.comment-input{
+  background:#0f0f11;border:1px solid var(--border);border-radius:8px;
+  padding:.45rem .75rem;font-size:.8rem;color:var(--text);
+  font-family:'DM Sans',sans-serif;outline:none;width:180px;
+}
+.comment-input:focus{border-color:var(--accent);}
+.action-btns{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;}
+.tabs{display:flex;gap:2px;background:#0f0f11;border-radius:10px;padding:3px;margin-bottom:1.5rem;width:fit-content;}
+.tab{padding:.45rem 1rem;border-radius:8px;cursor:pointer;font-size:.85rem;font-family:'Syne',sans-serif;font-weight:500;color:var(--muted);border:none;background:none;transition:all .15s;}
+.tab.active{background:var(--card);color:var(--text);}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">EF</div>
+    <div class="logo-text">Expense<span>Flow</span></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-title">Menu</div>
+    <a th:href="@{/dashboard}" class="nav-link active">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </a>
+  </nav>
+  <div class="sidebar-user">
+    <div class="user-avatar" th:text="${user.name.substring(0,1)}">S</div>
+    <div class="user-info">
+      <div class="user-name" th:text="${user.name}">Sarah</div>
+      <div class="user-role" th:text="${user.role}">Manager</div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title">Manager Dashboard</div>
+    <div class="topbar-actions">
+      <a th:href="@{/logout}" class="logout-btn">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </a>
+    </div>
+  </div>
+
+  <div class="content">
+    <div th:if="${param.success}" class="alert alert-success">
+      ✓ <span th:if="${param.success[0] == 'approved'}">Expense approved successfully.</span>
+      <span th:if="${param.success[0] == 'rejected'}">Expense rejected.</span>
+    </div>
+
+    <div class="page-header">
+      <h2>Expense Approvals</h2>
+      <p>Review and action your team's expense claims</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card" style="--accent-color:var(--warn)">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div class="stat-label">Pending Review</div>
+        <div class="stat-value" th:text="${pendingCount}">0</div>
+        <div class="stat-sub">Needs your action</div>
+      </div>
+      <div class="stat-card" style="--accent-color:var(--accent)">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="stat-label">Approved</div>
+        <div class="stat-value" th:text="${allExpenses.?[status.name() == 'APPROVED'].size()}">0</div>
+        <div class="stat-sub">This month</div>
+      </div>
+      <div class="stat-card" style="--accent-color:var(--danger)">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+        <div class="stat-label">Rejected</div>
+        <div class="stat-value" th:text="${allExpenses.?[status.name() == 'REJECTED'].size()}">0</div>
+        <div class="stat-sub">This month</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('pending',this)">
+        Pending <span th:text="'(' + ${pendingExpenses.size()} + ')'"></span>
+      </button>
+      <button class="tab" onclick="showTab('all',this)">All Expenses</button>
+    </div>
+
+    <!-- PENDING TAB -->
+    <div id="tab-pending" class="table-card">
+      <div th:if="${pendingExpenses.isEmpty()}" class="empty-state">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        <h3>All clear!</h3>
+        <p>No pending expenses to review.</p>
+      </div>
+      <table th:if="${!pendingExpenses.isEmpty()}">
+        <thead><tr>
+          <th>Employee</th><th>Title</th><th>Category</th><th>Amount</th><th>Date</th><th>Action</th>
+        </tr></thead>
+        <tbody>
+          <tr class="expense-row" th:each="exp : ${pendingExpenses}">
+            <td>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div class="user-avatar" style="width:30px;height:30px;font-size:11px;flex-shrink:0" th:text="${exp.user.name.substring(0,1)}">J</div>
+                <div>
+                  <div style="font-size:.85rem;font-weight:500" th:text="${exp.user.name}">John</div>
+                  <div style="font-size:.72rem;color:var(--muted)" th:text="${exp.user.department}">Sales</div>
+                </div>
+              </div>
+            </td>
+            <td style="font-weight:500" th:text="${exp.title}">Title</td>
+            <td><span class="cat" th:text="${exp.category}">TRAVEL</span></td>
+            <td><span class="amount amount-large" th:text="'₹' + #numbers.formatDecimal(exp.amount,0,'COMMA',2,'POINT')">₹0</span></td>
+            <td style="color:var(--muted);font-size:.8rem" th:text="${#temporals.format(exp.submittedDate,'dd MMM yyyy')}">01 Jan</td>
+            <td>
+              <div class="action-btns">
+                <input class="comment-input" th:id="'comment-' + ${exp.id}" placeholder="Optional note..." type="text"/>
+                <form class="action-form" th:action="@{'/manager/approve/' + ${exp.id}}" method="post">
+                  <input type="hidden" name="comment" th:id="'hcomment-approve-' + ${exp.id}" value=""/>
+                  <button type="submit" class="btn btn-primary btn-sm"
+                    th:onclick="'syncComment(' + ${exp.id} + ',\'approve\'); return true;'">✓ Approve</button>
+                </form>
+                <form class="action-form" th:action="@{'/manager/reject/' + ${exp.id}}" method="post">
+                  <input type="hidden" name="comment" th:id="'hcomment-reject-' + ${exp.id}" value=""/>
+                  <button type="submit" class="btn btn-danger btn-sm"
+                    th:onclick="'syncComment(' + ${exp.id} + ',\'reject\'); return true;'">✗ Reject</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ALL EXPENSES TAB -->
+    <div id="tab-all" class="table-card" style="display:none">
+      <table th:if="${!allExpenses.isEmpty()}">
+        <thead><tr>
+          <th>Employee</th><th>Title</th><th>Amount</th><th>Status</th><th>Date</th><th>Manager Note</th>
+        </tr></thead>
+        <tbody>
+          <tr th:each="exp : ${allExpenses}">
+            <td style="font-weight:500" th:text="${exp.user.name}">Name</td>
+            <td th:text="${exp.title}">Title</td>
+            <td><span class="amount" th:text="'₹' + #numbers.formatDecimal(exp.amount,0,'COMMA',2,'POINT')">₹0</span></td>
+            <td>
+              <span th:class="${exp.status.name() == 'PENDING' ? 'badge badge-pending' : (exp.status.name() == 'APPROVED' ? 'badge badge-approved' : 'badge badge-rejected')}"
+                    th:text="${exp.status}">PENDING</span>
+            </td>
+            <td style="color:var(--muted);font-size:.8rem" th:text="${#temporals.format(exp.submittedDate,'dd MMM yyyy')}">01 Jan</td>
+            <td style="color:var(--muted);font-size:.82rem;font-style:italic" th:text="${exp.managerComment != null ? exp.managerComment : '—'}">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+<script>
+function syncComment(id, action){
+  const val = document.getElementById('comment-'+id).value;
+  document.getElementById('hcomment-'+action+'-'+id).value = val;
+}
+function showTab(name, el){
+  document.querySelectorAll('[id^=tab-]').forEach(t=>t.style.display='none');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).style.display='';
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>

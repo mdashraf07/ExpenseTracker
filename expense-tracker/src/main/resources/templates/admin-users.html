@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ExpenseFlow – Manage Users</title>
+<link rel="stylesheet" th:href="@{/css/style.css}"/>
+<style>
+.two-col{display:grid;grid-template-columns:1fr 380px;gap:1.5rem;align-items:start;}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">EF</div>
+    <div class="logo-text">Expense<span>Flow</span></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-title">Admin</div>
+    <a th:href="@{/dashboard}" class="nav-link">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Overview
+    </a>
+    <a th:href="@{/admin/users}" class="nav-link active">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      Manage Users
+    </a>
+  </nav>
+  <div class="sidebar-user">
+    <div class="user-avatar">A</div>
+    <div class="user-info">
+      <div class="user-name">Admin</div>
+      <div class="user-role">Admin</div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title">Manage Users</div>
+    <div class="topbar-actions">
+      <a th:href="@{/logout}" class="logout-btn">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </a>
+    </div>
+  </div>
+
+  <div class="content">
+    <div th:if="${param.success}" class="alert alert-success">
+      ✓ <span th:if="${param.success[0] == 'created'}">User created successfully.</span>
+      <span th:if="${param.success[0] == 'deleted'}">User deleted.</span>
+    </div>
+
+    <div class="page-header">
+      <h2>User Management</h2>
+      <p>Create accounts and manage team roles</p>
+    </div>
+
+    <div class="two-col">
+      <!-- Users List -->
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-title">All Users</div>
+          <span style="font-size:.78rem;color:var(--muted)" th:text="${users.size()} + ' accounts'">0</span>
+        </div>
+        <table>
+          <thead><tr><th>User</th><th>Email</th><th>Department</th><th>Role</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr th:each="u : ${users}">
+              <td>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div class="user-avatar" style="width:32px;height:32px;font-size:12px;flex-shrink:0" th:text="${u.name.substring(0,1)}">J</div>
+                  <span style="font-weight:500" th:text="${u.name}">Name</span>
+                </div>
+              </td>
+              <td style="color:var(--muted);font-size:.82rem" th:text="${u.email}">email</td>
+              <td style="color:var(--muted);font-size:.82rem" th:text="${u.department}">Dept</td>
+              <td>
+                <span th:class="${u.role.name() == 'ADMIN' ? 'badge badge-admin' : (u.role.name() == 'MANAGER' ? 'badge badge-manager' : 'badge badge-employee')}"
+                      th:text="${u.role}">ROLE</span>
+              </td>
+              <td>
+                <form th:action="@{'/admin/users/delete/' + ${u.id}}" method="post"
+                      onsubmit="return confirm('Delete this user?')">
+                  <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Create User Form -->
+      <div class="form-card">
+        <h3 style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:600;margin-bottom:1.5rem;">Create New User</h3>
+        <form th:action="@{/admin/users/create}" method="post">
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label>Full Name</label>
+            <input type="text" name="name" placeholder="Jane Smith" required/>
+          </div>
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label>Email Address</label>
+            <input type="email" name="email" placeholder="jane@company.com" required/>
+          </div>
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label>Password</label>
+            <input type="password" name="password" placeholder="Min 6 characters" required minlength="6"/>
+          </div>
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label>Department</label>
+            <input type="text" name="department" placeholder="e.g. Engineering"/>
+          </div>
+          <div class="form-group" style="margin-bottom:1.5rem;">
+            <label>Role</label>
+            <select name="role" required>
+              <option value="EMPLOYEE">Employee</option>
+              <option value="MANAGER">Manager</option>
+              <option value="ADMIN">Admin</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%">Create User</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

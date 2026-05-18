@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ExpenseFlow – My Dashboard</title>
+<link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">EF</div>
+    <div class="logo-text">Expense<span>Flow</span></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-title">Menu</div>
+    <a th:href="@{/dashboard}" class="nav-link active">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </a>
+    <a th:href="@{/submit}" class="nav-link">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      New Expense
+    </a>
+  </nav>
+  <div class="sidebar-user">
+    <div class="user-avatar" th:text="${user.name.substring(0,1)}">J</div>
+    <div class="user-info">
+      <div class="user-name" th:text="${user.name}">John</div>
+      <div class="user-role" th:text="${user.role}">Employee</div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title">My Dashboard</div>
+    <div class="topbar-actions">
+      <a th:href="@{/submit}" class="btn btn-primary btn-sm">+ New Expense</a>
+      <a th:href="@{/logout}" class="logout-btn">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </a>
+    </div>
+  </div>
+
+  <div class="content">
+    <div th:if="${param.success}" class="alert alert-success">
+      ✓ <span th:if="${param.success[0] == 'submitted'}">Expense submitted successfully! Awaiting manager approval.</span>
+    </div>
+
+    <div class="page-header">
+      <h2>Welcome back, <span th:text="${user.name.split(' ')[0]}">John</span> 👋</h2>
+      <p>Track and manage your expense claims</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card" style="--accent-color:var(--accent)">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+        <div class="stat-label">Total Approved</div>
+        <div class="stat-value">₹<span th:text="${#numbers.formatDecimal(totalApproved, 0, 'COMMA', 2, 'POINT')}">0.00</span></div>
+        <div class="stat-sub">Reimbursed amount</div>
+      </div>
+      <div class="stat-card" style="--accent-color:var(--warn)">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div class="stat-label">Pending</div>
+        <div class="stat-value" th:text="${expenses.?[status.name() == 'PENDING'].size()}">0</div>
+        <div class="stat-sub">Awaiting approval</div>
+      </div>
+      <div class="stat-card" style="--accent-color:var(--danger)">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+        <div class="stat-label">Rejected</div>
+        <div class="stat-value" th:text="${expenses.?[status.name() == 'REJECTED'].size()}">0</div>
+        <div class="stat-sub">Needs resubmission</div>
+      </div>
+      <div class="stat-card" style="--accent-color:var(--info)">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <div class="stat-label">Total Claims</div>
+        <div class="stat-value" th:text="${expenses.size()}">0</div>
+        <div class="stat-sub">All time</div>
+      </div>
+    </div>
+
+    <!-- Expense Table -->
+    <div class="table-card">
+      <div class="table-header">
+        <div class="table-title">My Expenses</div>
+        <a th:href="@{/submit}" class="btn btn-ghost btn-sm">+ Add New</a>
+      </div>
+      <div th:if="${expenses.isEmpty()}" class="empty-state">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <h3>No expenses yet</h3>
+        <p>Submit your first expense claim</p>
+      </div>
+      <table th:if="${!expenses.isEmpty()}">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Amount</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Manager Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="exp : ${expenses}">
+            <td style="font-weight:500" th:text="${exp.title}">Title</td>
+            <td><span class="cat" th:text="${exp.category}">TRAVEL</span></td>
+            <td><span class="amount" th:text="'₹' + #numbers.formatDecimal(exp.amount,0,'COMMA',2,'POINT')">₹0</span></td>
+            <td style="color:var(--muted);font-size:.8rem" th:text="${#temporals.format(exp.submittedDate,'dd MMM yyyy')}">01 Jan 2024</td>
+            <td>
+              <span th:class="${exp.status.name() == 'PENDING' ? 'badge badge-pending' : (exp.status.name() == 'APPROVED' ? 'badge badge-approved' : 'badge badge-rejected')}"
+                    th:text="${exp.status}">PENDING</span>
+            </td>
+            <td style="color:var(--muted);font-size:.82rem;font-style:italic" th:text="${exp.managerComment != null ? exp.managerComment : '—'}">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+</body>
+</html>

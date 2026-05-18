@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ExpenseFlow – Submit Expense</title>
+<link rel="stylesheet" th:href="@{/css/style.css}"/>
+<style>
+.upload-area{
+  border:2px dashed var(--border);border-radius:12px;padding:2rem;
+  text-align:center;cursor:pointer;transition:border-color .2s,background .2s;
+  color:var(--muted);font-size:.875rem;
+}
+.upload-area:hover{border-color:var(--accent);background:rgba(110,231,183,.03);}
+.upload-area input{display:none;}
+.upload-label{cursor:pointer;}
+.upload-icon{font-size:2rem;margin-bottom:.75rem;display:block;}
+.char-counter{font-size:.75rem;color:var(--muted);text-align:right;margin-top:.25rem;}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">EF</div>
+    <div class="logo-text">Expense<span>Flow</span></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-title">Menu</div>
+    <a th:href="@{/dashboard}" class="nav-link">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </a>
+    <a th:href="@{/submit}" class="nav-link active">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      New Expense
+    </a>
+  </nav>
+  <div class="sidebar-user">
+    <div class="user-avatar" th:text="${user.name.substring(0,1)}">J</div>
+    <div class="user-info">
+      <div class="user-name" th:text="${user.name}">John</div>
+      <div class="user-role" th:text="${user.role}">Employee</div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title">Submit Expense</div>
+    <div class="topbar-actions">
+      <a th:href="@{/logout}" class="logout-btn">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </a>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="page-header">
+      <h2>New Expense Claim</h2>
+      <p>Fill in the details below. Your manager will be notified.</p>
+    </div>
+
+    <div class="form-card">
+      <form th:action="@{/submit}" method="post" enctype="multipart/form-data">
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label for="title">Expense Title *</label>
+            <input type="text" id="title" name="title" placeholder="e.g. Client dinner at Taj Hotel" required maxlength="200"/>
+          </div>
+
+          <div class="form-group">
+            <label for="amount">Amount (₹) *</label>
+            <input type="number" id="amount" name="amount" placeholder="0.00" step="0.01" min="1" required/>
+          </div>
+
+          <div class="form-group">
+            <label for="category">Category *</label>
+            <select id="category" name="category" required>
+              <option value="" disabled selected>Select category</option>
+              <option value="TRAVEL">✈ Travel</option>
+              <option value="FOOD">🍽 Food &amp; Dining</option>
+              <option value="OFFICE">🖥 Office Supplies</option>
+              <option value="ACCOMMODATION">🏨 Accommodation</option>
+              <option value="OTHER">📦 Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Receipt / Invoice</label>
+            <div class="upload-area" id="uploadArea">
+              <label class="upload-label" for="receipt">
+                <span class="upload-icon">📎</span>
+                <strong>Click to upload receipt</strong><br/>
+                <span>PNG, JPG, PDF up to 5MB</span>
+              </label>
+              <input type="file" id="receipt" name="receipt" accept=".png,.jpg,.jpeg,.pdf"/>
+            </div>
+            <div id="fileName" style="font-size:.78rem;color:var(--accent);margin-top:.4rem;"></div>
+          </div>
+
+          <div class="form-group full">
+            <label for="description">Description / Justification</label>
+            <textarea id="description" name="description" placeholder="Briefly explain the business purpose of this expense..." maxlength="1000"></textarea>
+            <div class="char-counter"><span id="charCount">0</span>/1000</div>
+          </div>
+
+        </div>
+
+        <div style="display:flex;gap:1rem;justify-content:flex-end;margin-top:1.75rem;padding-top:1.5rem;border-top:1px solid var(--border);">
+          <a th:href="@{/dashboard}" class="btn btn-ghost">Cancel</a>
+          <button type="submit" class="btn btn-primary">Submit Claim →</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+
+<script>
+document.getElementById('receipt').addEventListener('change', function(e){
+  const name = e.target.files[0]?.name || '';
+  document.getElementById('fileName').textContent = name ? '✓ ' + name : '';
+  if(name) document.getElementById('uploadArea').style.borderColor='var(--accent)';
+});
+document.getElementById('description').addEventListener('input', function(){
+  document.getElementById('charCount').textContent = this.value.length;
+});
+</script>
+</body>
+</html>
